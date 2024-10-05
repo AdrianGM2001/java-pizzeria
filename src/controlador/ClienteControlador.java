@@ -75,7 +75,7 @@ public class ClienteControlador {
     }
 
     public boolean anyadirLinea(LineaPedido lp) {
-        return pedidoControlador.anyadirLinea(new LineaPedido(lp));
+        return pedidoControlador.anyadirLinea(lp);
     }
 
     public boolean finalizarPedido(Pagable pago) {
