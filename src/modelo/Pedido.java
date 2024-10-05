@@ -2,7 +2,6 @@ package modelo;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -67,17 +66,13 @@ public class Pedido {
         int indice = lineas.indexOf(linea);
         
         if (indice == -1)
-            lineas.add(linea);
+            lineas.add(new LineaPedido(linea));
         else
             lineas.get(indice).addCantidad(linea.getCantidad());
             
         precioTotal += linea.getPrecio();
-        Collections.sort(lineas, new Comparator<LineaPedido>() {
-        @Override
-            public int compare(LineaPedido lp1, LineaPedido lp2) {
-                return Integer.compare(lp1.getId(), lp2.getId());
-    }
-});
+        
+        Collections.sort(lineas, (lp1, lp2) -> lp1.getId() - lp2.getId());
     }
 
     @Override
