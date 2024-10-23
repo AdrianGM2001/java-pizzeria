@@ -100,27 +100,27 @@ public class ClienteControlador {
 
     // IMPORTACIONES Y EXPORTACIONES
 
-    public List<Cliente> importarAdministradores() throws IOException, IllegalArgumentException  {
+    public List<Cliente> importarAdministradores() throws Exception {
         return GestionFicheros.importarSinLibreria();
     }
 
-    public boolean exportarAdministradores(List<Cliente> administradores) throws IOException {
+    public boolean exportarAdministradores(List<Cliente> administradores) throws Exception {
         return GestionFicheros.exportarSinLibreria(administradores.stream().filter(Cliente::isAdmin).toList(), ";");
     }
 
-    public List<Cliente> importarClientes() throws JAXBException {
+    public List<Cliente> importarClientes() throws Exception {
         return GestionFicheros.importarXML();
     }
     
-    public boolean exportarClientes(List<Cliente> clientes) throws JAXBException {
+    public boolean exportarClientes(List<Cliente> clientes) throws Exception {
         return GestionFicheros.exportarXML(clientes.stream().toList());
     }
 
-    public List<Ingrediente> importarIngredientes() throws IOException {
+    public List<Ingrediente> importarIngredientes() throws Exception {
         return GestionFicheros.importarCSV();
     }
 
-    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws IOException, CsvFieldAssignmentException {
+    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws Exception {
         return GestionFicheros.exportarCSV(ingredientes);
     }
 }

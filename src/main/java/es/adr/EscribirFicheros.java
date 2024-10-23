@@ -1,12 +1,9 @@
 package es.adr;
 
-import com.opencsv.exceptions.CsvFieldAssignmentException;
 import es.adr.controlador.ClienteControlador;
 import es.adr.modelo.Cliente;
 import es.adr.modelo.Ingrediente;
 
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
 import java.util.List;
 
 public class EscribirFicheros {
@@ -34,22 +31,22 @@ public class EscribirFicheros {
         try {
             cc.exportarAdministradores(administradores);
             System.out.println("Se ha creado el archivo admin.txt");
-        } catch (IOException e) {
-            System.err.println("Ha habido un problema al escribir el archivo admin.txt");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
         }
 
         try {
             cc.exportarClientes(clientes);
             System.out.println("Se ha creado el archivo clientes.xml");
-        } catch (JAXBException e) {
-            System.err.println("Ha habido un problema al escribir el archivo clientes.xml");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
         }
 
         try {
             cc.exportarIngredientes(ingredientes);
             System.out.println("Se ha creado el archivo ingredientes.csv");
-        } catch (IOException | CsvFieldAssignmentException  e) {
-            System.err.println("Ha habido un problema al escribir el archivo ingredientes.csv");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
         }
     }
 }
