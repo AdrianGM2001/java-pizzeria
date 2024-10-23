@@ -1,7 +1,7 @@
-package modelo;
+package es.adr.modelo;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -15,9 +15,9 @@ public class Pedido {
 
     public Pedido(int id, Cliente cliente) {
         this.id = id;
-        this.fecha = new Date();
-        this.precioTotal = 0;
-        this.estado = ESTADO_PEDIDO.PENDIENTE;
+        fecha = new Date();
+        precioTotal = 0;
+        estado = ESTADO_PEDIDO.PENDIENTE;
         this.cliente = cliente;
         lineas = new ArrayList<>();
     }
@@ -72,18 +72,18 @@ public class Pedido {
             
         precioTotal += linea.getPrecio();
         
-        Collections.sort(lineas, (lp1, lp2) -> lp1.getId() - lp2.getId());
+        lineas.sort(Comparator.comparingInt(LineaPedido::getId));
     }
 
     @Override
     public String toString() {
-        String ticket = String.format("%s%nID PEDIDO: %d%nFECHA: %s%nESTADO: %s%n%nID    CANTIDAD   NOMBRE PRODUCTO        PRECIO%n", "-".repeat(60), id, fecha.toString(), estado);
+        StringBuilder ticket = new StringBuilder(String.format("%s%nID PEDIDO: %d%nFECHA: %s%nESTADO: %s%n%nID    CANTIDAD   NOMBRE PRODUCTO        PRECIO%n", "-".repeat(60), id, fecha.toString(), estado));
 
         for (LineaPedido linea : lineas)
-            ticket += linea;
+            ticket.append(linea);
         
-        ticket += String.format("%n%-32s TOTAL  %.2feur", " ", precioTotal);
+        ticket.append(String.format("%n%-32s TOTAL  %.2feur", " ", precioTotal));
 
-        return String.format("%s%n%s%n", ticket, "-".repeat(60));
+        return String.format("%s%n%s%n", ticket.toString(), "-".repeat(60));
     }
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<clientes>
+    <cliente id="1">
+        <dni>57675445X</dni>
+        <nombre>Luis</nombre>
+        <direccion>Calle Falsa 123</direccion>
+        <telefono>564635466</telefono>
+        <email>rtyger54@ex.es</email>
+        <password>ertyhertyg</password>
+        <admin>false</admin>
+    </cliente>
+    <cliente id="2">
+        <dni>43565767Y</dni>
+        <nombre>Alberto</nombre>
+        <direccion>Calle Falsa 123</direccion>
+        <telefono>2345546543</telefono>
+        <email>sfdthg456@ex.es</email>
+        <password>ertyaqwerq354</password>
+        <admin>false</admin>
+    </cliente>
+    <cliente id="3">
+        <dni>34568769Z</dni>
+        <nombre>Paco</nombre>
+        <direccion>Calle Falsa 123</direccion>
+        <telefono>456745543</telefono>
+        <email>gfyhfrsdthge@ex.es</email>
+        <password>ertyer346</password>
+        <admin>false</admin>
+    </cliente>
+</clientes>

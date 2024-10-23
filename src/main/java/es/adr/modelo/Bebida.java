@@ -1,4 +1,4 @@
-package modelo;
+package es.adr.modelo;
 
 public class Bebida extends Producto {
     private final SIZE tamanyo;

@@ -1,12 +1,17 @@
-package controlador;
+package es.adr.controlador;
 
-import modelo.*;
+import com.opencsv.exceptions.CsvFieldAssignmentException;
+import es.adr.modelo.*;
+import es.adr.utilidades.GestionFicheros;
+
+import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClienteControlador {
     private static ClienteControlador clienteControlador;
-    private PedidoControlador pedidoControlador;
+    private final PedidoControlador pedidoControlador;
 
     private List<Cliente> clientes;
     private Cliente clienteActual;
@@ -61,7 +66,7 @@ public class ClienteControlador {
 
     public boolean logear(String email, String contrasenya) {
         clienteActual = clientes.stream()
-                .filter(c -> c.getEmail().equals(email) && c.getContrasenya().equals(contrasenya))
+                .filter(c -> c.getEmail().equals(email) && c.getPassword().equals(contrasenya))
                 .findAny()
                 .orElse(null);
 
@@ -91,5 +96,31 @@ public class ClienteControlador {
     public boolean recibirPedido() {
         clienteActual.addPedidos(pedidoControlador.entregarPedido());
         return true;
+    }
+
+    // IMPORTACIONES Y EXPORTACIONES
+
+    public List<Cliente> importarAdministradores() throws IOException, IllegalArgumentException  {
+        return GestionFicheros.importarSinLibreria();
+    }
+
+    public boolean exportarAdministradores(List<Cliente> administradores) throws IOException {
+        return GestionFicheros.exportarSinLibreria(administradores.stream().filter(Cliente::isAdmin).toList(), ";");
+    }
+
+    public List<Cliente> importarClientes() throws JAXBException {
+        return GestionFicheros.importarXML();
+    }
+    
+    public boolean exportarClientes(List<Cliente> clientes) throws JAXBException {
+        return GestionFicheros.exportarXML(clientes.stream().toList());
+    }
+
+    public List<Ingrediente> importarIngredientes() throws IOException {
+        return GestionFicheros.importarCSV();
+    }
+
+    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws IOException, CsvFieldAssignmentException {
+        return GestionFicheros.exportarCSV(ingredientes);
     }
 }

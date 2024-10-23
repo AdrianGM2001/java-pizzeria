@@ -1,4 +1,4 @@
-package modelo;
+package es.adr.modelo;
 
 import java.util.List;
 

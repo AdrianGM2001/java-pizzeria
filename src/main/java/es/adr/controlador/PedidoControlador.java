@@ -1,9 +1,10 @@
-package controlador;
+package es.adr.controlador;
 
-import modelo.ESTADO_PEDIDO;
-import modelo.LineaPedido;
-import modelo.Pagable;
-import modelo.Pedido;
+import es.adr.modelo.ESTADO_PEDIDO;
+import es.adr.modelo.LineaPedido;
+import es.adr.modelo.Pagable;
+import es.adr.modelo.Pedido;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class PedidoControlador {
     }
 
     public boolean finalizarPedido(Pagable pago) {
-        if (pedidoActual.getLineas().size() == 0)
+        if (pedidoActual.getLineas().isEmpty())
             throw new IllegalStateException("ERROR: No hay ninguna línea en el pedido");
 
         pago.pagar(pedidoActual.getPrecioTotal());

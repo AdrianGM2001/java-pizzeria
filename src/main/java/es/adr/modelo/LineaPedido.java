@@ -1,4 +1,4 @@
-package modelo;
+package es.adr.modelo;
 
 public class LineaPedido {
     private final int id;

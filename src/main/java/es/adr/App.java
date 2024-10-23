@@ -1,18 +1,13 @@
+package es.adr;
+
+import es.adr.controlador.ClienteControlador;
+import es.adr.modelo.*;
+
 import java.util.List;
 
-import controlador.ClienteControlador;
-import modelo.Bebida;
-import modelo.Ingrediente;
-import modelo.LineaPedido;
-import modelo.Pagable;
-import modelo.PagarEfectivo;
-import modelo.PagarTarjeta;
-import modelo.Pasta;
-import modelo.Pizza;
-import modelo.SIZE;
 
 public class App {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         ClienteControlador cc = ClienteControlador.getInstance();
 
         // INGREDIENTES
@@ -68,7 +63,7 @@ public class App {
         // BEBIDAS
         Bebida bebida1 = new Bebida(11, "Coca-Cola", 1.50, SIZE.GRANDE);
         Bebida bebida2 = new Bebida(12, "Fanta", 1.30, SIZE.MEDIANA);
-        Bebida bebida3 = new Bebida(13, "Agua", 0.80, SIZE.PEQUEÑA);
+        Bebida bebida3 = new Bebida(13, "Agua", 0.80, SIZE.PEQUENYA);
         Bebida bebida4 = new Bebida(14, "Cerveza", 2.00, SIZE.GRANDE);
         Bebida bebida5 = new Bebida(15, "Red Bull", 1.70, SIZE.MEDIANA);
 
