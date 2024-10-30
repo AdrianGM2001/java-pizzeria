@@ -1,10 +1,12 @@
 package es.adr.controlador;
 
-import es.adr.modelo.ESTADO_PEDIDO;
-import es.adr.modelo.LineaPedido;
-import es.adr.modelo.Pagable;
-import es.adr.modelo.Pedido;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+import es.adr.modelo.*;
+import es.adr.utilidades.GestionFicheros;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,5 +81,13 @@ public class PedidoControlador {
         pedidoActual.setEstado(ESTADO_PEDIDO.ENTREGADO);
         System.out.println("ENTREGAR_PEDIDO: Pedido entregado");
         return pedidoActual;
+    }
+
+    public List<Ingrediente> importarIngredientes() throws FileNotFoundException, IllegalStateException, IOException {
+        return GestionFicheros.importarIngredientesCSV();
+    }
+
+    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException, IOException {
+        return GestionFicheros.exportarIngredientesCSV(ingredientes);
     }
 }

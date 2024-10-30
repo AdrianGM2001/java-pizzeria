@@ -28,13 +28,11 @@ public class GestionFicheros {
     // Sin librería
 
     // Sin librería (el fichero no tiene encabezado)
-    public static List<Cliente> importarSinLibreria() throws Exception {
+    public static List<Cliente> importarAdministradoresSinLibreria() throws IOException {
         try (Stream<String> lineas = Files.lines(Path.of(RUTA_ADMINISTRADORES))) {
             return lineas.map(GestionFicheros::stringToCliente).toList();
         } catch (IOException e) {
-            throw new IOException("Ha habido un problema con el archivo admin.txt");
-        } catch (Exception e) {
-            throw new Exception("Ha habido un problema al leer el archivo admin.txt");
+            throw new IOException(e.getMessage() + "\nHa habido un problema con el archivo admin.txt");
         }
     }
 
@@ -43,32 +41,30 @@ public class GestionFicheros {
 
         // Validación básica
         if (elementos.size() != 7)
-            throw new IllegalArgumentException("Ha habido un problema con el archivo admin.txt\nNúmero de campos incorrecto o uso de \",\", \"|\" o \";\" en los campos -> " + linea);
+            throw new IllegalArgumentException("\nHa habido un problema con el archivo admin.txt\nNúmero de campos incorrecto o uso de \",\", \"|\" o \";\" en los campos -> " + linea);
 
         if (elementos.stream().anyMatch(String::isEmpty))
-            throw new IllegalArgumentException("Ha habido un problema con el archivo admin.txt\nCampo/s vacío/s -> " + linea);
+            throw new IllegalArgumentException("\nHa habido un problema con el archivo admin.txt\nCampo/s vacío/s -> " + linea);
 
         try {
             // id de 0 a 2147483647
             if (Integer.parseInt(elementos.getFirst()) < 0) {
-                throw new IllegalArgumentException("Ha habido un problema con el archivo admin.txt\nID incorrecto (valor mínimo 0) -> " + linea);
+                throw new IllegalArgumentException("\nHa habido un problema con el archivo admin.txt\nID incorrecto (valor mínimo 0) -> " + linea);
             }
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Ha habido un problema con el archivo admin.txt\nID incorrecto o demasiado grande (valor máximo " + Integer.MAX_VALUE +") -> " + linea);
+            throw new IllegalArgumentException(e.getMessage() + "\nHa habido un problema con el archivo admin.txt\nID incorrecto o demasiado grande (valor máximo " + Integer.MAX_VALUE +") -> " + linea);
         }
 
         return new Cliente(Integer.parseInt(elementos.get(0)), elementos.get(1), elementos.get(2), elementos.get(3), elementos.get(4), elementos.get(5), elementos.get(6), true);
     }
 
     // Sin librería (el fichero no tiene encabezado, tampoco impide exportar con separadores admitidos en la importación, pero esto no había que hacerlo) 
-    public static boolean exportarSinLibreria(List<Cliente> clientes, String separador) throws Exception {
+    public static boolean exportarAdministradoresSinLibreria(List<Cliente> clientes, String separador) throws IOException {
         try {
             Files.write(Path.of(RUTA_ADMINISTRADORES), clientes.stream().map(cliente -> GestionFicheros.clienteToString(cliente, separador)).toList());
             return true;
         } catch (IOException e) {
-            throw new IOException("Ha habido un problema al escribir el archivo admin.txt");
-        } catch (Exception e) {
-            throw new Exception("Ha habido un problema al escribir o procesar el archivo admin.txt");
+            throw new IOException(e.getMessage() + "\nHa habido un problema al escribir el archivo admin.txt");
         }
     }
 
@@ -78,21 +74,18 @@ public class GestionFicheros {
 
     // Librería JAXB
 
-    public static List<Cliente> importarXML() throws Exception {
+    public static List<Cliente> importarClientesXML() throws JAXBException {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(ClienteWrapper.class);
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             ClienteWrapper persona = (ClienteWrapper) unmarshaller.unmarshal(new File(RUTA_CLIENTES));
             return persona.getClientes();
         } catch (JAXBException e) {
-            throw new JAXBException("Hay uno o más campos con datos no válidos o vacíos en el archivo clientes.xml");
-        } catch (Exception e) {
-            throw new Exception("Ha habido un problema al leer o procesar el archivo clientes.xml");
+            throw new JAXBException(e.getMessage() + "\nHay uno o más campos con datos no válidos o vacíos en el archivo clientes.xml");
         }
-
     }
 
-    public static boolean exportarXML(List<Cliente> clientes) throws Exception {
+    public static boolean exportarClientesXML(List<Cliente> clientes) throws JAXBException {
         try {
             ClienteWrapper persona = new ClienteWrapper(clientes);
             JAXBContext jaxbContext = JAXBContext.newInstance(ClienteWrapper.class);
@@ -101,44 +94,38 @@ public class GestionFicheros {
             marshaller.marshal(persona, new File(RUTA_CLIENTES));
             return true;
         } catch (JAXBException e) {
-            throw new JAXBException("Hay uno o más campos con datos no válidos en la lista de clientes");
-        } catch (Exception e) {
-            throw new Exception("Ha habido un problema al procesar o escribir el el archivo clientes.xml");
+            throw new JAXBException(e.getMessage() + "\nHay uno o más campos con datos no válidos en la lista de clientes");
         }
     }
 
     // Librería OpenCSV
 
-    public static List<Ingrediente> importarCSV() throws Exception {
+    public static List<Ingrediente> importarIngredientesCSV() throws IllegalStateException, IOException {
         List<Ingrediente> ingredientes;
         try (FileReader fileReader = new FileReader(RUTA_INGREDIENTES)) {
             CsvToBean<Ingrediente> csvToBean = new CsvToBeanBuilder<Ingrediente>(fileReader).withType(Ingrediente.class).withSeparator(';').build();
             ingredientes = csvToBean.parse();
             return ingredientes;
         } catch (FileNotFoundException e) {
-            throw new FileNotFoundException("No se ha encontrado el archivo ingredientes.csv");
+            throw new FileNotFoundException(e.getMessage() + "\nNo se ha encontrado el archivo ingredientes.csv");
         } catch (IllegalStateException e) {
-            throw new IllegalStateException("Hay uno o más campos con datos no válidos o vacíos en el archivo ingredientes.csv");
+            throw new IllegalStateException(e.getMessage() + "\nHay uno o más campos con datos no válidos o vacíos en el archivo ingredientes.csv");
         } catch (IOException e) {
-            throw new IOException("Ha habido un problema al leer el archivo ingredientes.csv");
-        } catch (Exception e) {
-            throw new Exception("Ha habido un problema al leer o procesar el archivo ingredientes.csv");
+            throw new IOException(e.getMessage() + "\nHa habido un problema al leer el archivo ingredientes.csv");
         }
     }
 
-    public static boolean exportarCSV(List<Ingrediente> ingredientes) throws Exception {
+    public static boolean exportarIngredientesCSV(List<Ingrediente> ingredientes) throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
         try (PrintWriter pw = new PrintWriter(RUTA_INGREDIENTES)) {
             StatefulBeanToCsv<Ingrediente> beanToCsv = new StatefulBeanToCsvBuilder<Ingrediente>(pw).withSeparator(';').build();
             beanToCsv.write(ingredientes);
             return true;
         } catch (IOException e) {
-            throw new IOException("Ha habido un problema al escribir el archivo ingredientes.csv");
+            throw new IOException(e.getMessage() + "\nHa habido un problema al escribir el archivo ingredientes.csv");
         } catch (CsvDataTypeMismatchException  e) {
-            throw new CsvDataTypeMismatchException("Hay uno o más campos con datos no válidos en la lista de ingredientes");
+            throw new CsvDataTypeMismatchException(e.getMessage() + "\nHay uno o más campos con datos no válidos en la lista de ingredientes");
         } catch (CsvRequiredFieldEmptyException e) {
-            throw new CsvRequiredFieldEmptyException("Hay uno o más campos obligatorios vacíos en la lista de ingredientes");
-        } catch (Exception e) {
-            throw new Exception("Ha habido un problema al procesar o escribir el archivo ingredientes.csv");
+            throw new CsvRequiredFieldEmptyException(e.getMessage() + "\nHay uno o más campos obligatorios vacíos en la lista de ingredientes");
         }
     }
 }

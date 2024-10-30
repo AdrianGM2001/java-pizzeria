@@ -1,10 +1,12 @@
 package es.adr.controlador;
 
-import com.opencsv.exceptions.CsvFieldAssignmentException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import es.adr.modelo.*;
 import es.adr.utilidades.GestionFicheros;
 
 import javax.xml.bind.JAXBException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,27 +102,27 @@ public class ClienteControlador {
 
     // IMPORTACIONES Y EXPORTACIONES
 
-    public List<Cliente> importarAdministradores() throws Exception {
-        return GestionFicheros.importarSinLibreria();
+    public List<Cliente> importarAdministradores() throws IOException {
+        return GestionFicheros.importarAdministradoresSinLibreria();
     }
 
-    public boolean exportarAdministradores(List<Cliente> administradores) throws Exception {
-        return GestionFicheros.exportarSinLibreria(administradores.stream().filter(Cliente::isAdmin).toList(), ";");
+    public boolean exportarAdministradores(List<Cliente> administradores) throws IOException {
+        return GestionFicheros.exportarAdministradoresSinLibreria(administradores.stream().filter(Cliente::isAdmin).toList(), ";");
     }
 
-    public List<Cliente> importarClientes() throws Exception {
-        return GestionFicheros.importarXML();
+    public List<Cliente> importarClientes() throws JAXBException {
+        return GestionFicheros.importarClientesXML();
     }
     
-    public boolean exportarClientes(List<Cliente> clientes) throws Exception {
-        return GestionFicheros.exportarXML(clientes.stream().toList());
+    public boolean exportarClientes(List<Cliente> clientes) throws JAXBException {
+        return GestionFicheros.exportarClientesXML(clientes.stream().toList());
     }
 
-    public List<Ingrediente> importarIngredientes() throws Exception {
-        return GestionFicheros.importarCSV();
+    public List<Ingrediente> importarIngredientes() throws FileNotFoundException, IllegalStateException, IOException {
+        return pedidoControlador.importarIngredientes();
     }
 
-    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws Exception {
-        return GestionFicheros.exportarCSV(ingredientes);
+    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException, IOException {
+        return pedidoControlador.exportarIngredientes(ingredientes);
     }
 }
