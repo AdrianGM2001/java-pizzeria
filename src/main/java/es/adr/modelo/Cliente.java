@@ -1,15 +1,9 @@
 package es.adr.modelo;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.List;
 
-@XmlAccessorType(XmlAccessType.FIELD)
 public class Cliente {
-    @XmlAttribute
     private int id;
     private String dni;
     private String nombre;
@@ -17,11 +11,10 @@ public class Cliente {
     private String telefono;
     private String email;
     private String password;
-    @XmlTransient
     private List<Pedido> pedidos;
     private boolean admin;
 
-    public Cliente(int id, String dni, String nombre, String direccion, String telefono, String email, String password) {
+    public Cliente(int id, String dni, String nombre, String direccion, String telefono, String email, String password, boolean admin) {
         this.id = id;
         this.dni = dni;
         this.nombre = nombre;
@@ -29,21 +22,28 @@ public class Cliente {
         this.telefono = telefono;
         this.email = email;
         this.password = password;
-        pedidos = new ArrayList<>();
-        admin = false;
-    }
-
-    public Cliente(int id, String dni, String nombre, String direccion, String telefono, String email, String password, boolean admin) {
-        this(id, dni, nombre, direccion, telefono, email, password);
         this.admin = admin;
+        pedidos = new ArrayList<>();
     }
 
-    public Cliente() {
-        pedidos = new ArrayList<>();
+    public Cliente(int id, String dni, String nombre, String direccion, String telefono, String email, String password) {
+        this(id, dni, nombre, direccion, telefono, email, password, false);
+    }
+
+    public Cliente(String dni, String nombre, String direccion, String telefono, String email, String password) {
+        this(0, dni, nombre, direccion, telefono, email, password, false);
+    }
+
+    public Cliente(String dni, String nombre, String direccion, String telefono, String email, String password, boolean admin) {
+        this(0, dni, nombre, direccion, telefono, email, password, admin);
     }
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getDni() {

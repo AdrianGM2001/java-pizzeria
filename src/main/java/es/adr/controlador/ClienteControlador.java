@@ -1,128 +1,108 @@
 package es.adr.controlador;
 
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import es.adr.modelo.*;
-import es.adr.utilidades.GestionFicheros;
+import es.adr.modelo.dao.Dao;
+import es.adr.modelo.dao.impl.ClienteDao;
 
-import javax.xml.bind.JAXBException;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Optional;
 
 public class ClienteControlador {
-    private static ClienteControlador clienteControlador;
+    private static ClienteControlador instance;
     private final PedidoControlador pedidoControlador;
+    private final ProductoControlador productoControlador;
+    private final Dao<Cliente> daoCliente;
 
-    private List<Cliente> clientes;
-    private Cliente clienteActual;
+    private Optional<Cliente> clienteActual;
 
-    private ClienteControlador() {
-        pedidoControlador = PedidoControlador.getInstance();
-        clientes = new ArrayList<>();
-        clienteActual = null;
+    private ClienteControlador(Connection conn) {
+        pedidoControlador = PedidoControlador.getInstance(conn);
+        productoControlador = ProductoControlador.getInstance(conn);
+        clienteActual = Optional.empty();
+        daoCliente = new ClienteDao(conn);
     }
 
-    public static ClienteControlador getInstance() {
-        if (clienteControlador != null)
-            return clienteControlador;
+    public static ClienteControlador getInstance(Connection conn) {
+        if (instance == null)
+            instance = new ClienteControlador(conn);
 
-        return new ClienteControlador();
-    }
-
-    public List<Cliente> getClientes() {
-        return clientes;
-    }
-
-    public void setClientes(List<Cliente> clientes) {
-        this.clientes = clientes;
-    }
-
-    public Cliente getClienteActual() {
-        return clienteActual;
-    }
-
-    public void setClienteActual(Cliente clienteActual) {
-        this.clienteActual = clienteActual;
-    }
-
-    public PedidoControlador getPedidoControlador() {
-        return pedidoControlador;
-    }
-
-    
-    public boolean registrar(int id, String dni, String nombre, String direccion, String telefono, String email, String contrasenya) {
-        Cliente cliente = null;
-
-        if (clientes.stream().anyMatch(c -> c.getEmail().equals(email))) {
-            System.out.println("REGISTRO: El cliente ya está registrado");
-        } else {
-            cliente = new Cliente(id, dni, nombre, direccion, telefono, email, contrasenya);
-            clientes.add(cliente);
-            System.out.println("REGISTRO: Registro correcto");
-        }
-
-        return cliente != null;
-    }
-
-    public boolean logear(String email, String contrasenya) {
-        clienteActual = clientes.stream()
-                .filter(c -> c.getEmail().equals(email) && c.getPassword().equals(contrasenya))
-                .findAny()
-                .orElse(null);
-
-        if (clienteActual != null) {
-            System.out.println("LOGIN: Login correcto");
-            pedidoControlador.setPedidoActual(new Pedido(clienteActual.getPedidos().size(), clienteActual));
-        } else
-            System.out.println("LOGIN: Error");
-
-        return clienteActual != null;
-    }
-
-    public boolean anyadirLinea(LineaPedido lp) {
-        return pedidoControlador.anyadirLinea(lp);
-    }
-
-    public boolean finalizarPedido(Pagable pago) {
-        return pedidoControlador.finalizarPedido(pago);
-    }
-
-    public boolean cancelarPedido() {
-        clienteActual.addPedidos(pedidoControlador.cancelarPedido());
-        pedidoControlador.setPedidoActual(new Pedido(clienteActual.getPedidos().size(), clienteActual));
-        return true;
-    }
-
-    public boolean recibirPedido() {
-        clienteActual.addPedidos(pedidoControlador.entregarPedido());
-        return true;
-    }
-
-    // IMPORTACIONES Y EXPORTACIONES
-
-    public List<Cliente> importarAdministradores() throws IOException {
-        return GestionFicheros.importarAdministradoresSinLibreria();
-    }
-
-    public boolean exportarAdministradores(List<Cliente> administradores) throws IOException {
-        return GestionFicheros.exportarAdministradoresSinLibreria(administradores.stream().filter(Cliente::isAdmin).toList(), ";");
-    }
-
-    public List<Cliente> importarClientes() throws JAXBException {
-        return GestionFicheros.importarClientesXML();
+        return new ClienteControlador(conn);
     }
     
-    public boolean exportarClientes(List<Cliente> clientes) throws JAXBException {
-        return GestionFicheros.exportarClientesXML(clientes.stream().toList());
+    public void registrar(Cliente cliente) throws SQLException, IllegalArgumentException {
+        clienteActual = Optional.empty();
+        daoCliente.save(cliente);
+        clienteActual = Optional.of(cliente);
+        pedidoControlador.agregarPedido(new Pedido(cliente));
+        System.out.println("REGISTRO: Registro correcto");
     }
 
-    public List<Ingrediente> importarIngredientes() throws FileNotFoundException, IllegalStateException, IOException {
-        return pedidoControlador.importarIngredientes();
+    public void iniciarSesion(String email, String password) throws SQLException, IllegalArgumentException {
+        clienteActual = Optional.empty();
+        Optional<Cliente> clienteEnBD = ((ClienteDao) daoCliente).findByEmail(email);
+
+        if (clienteEnBD.isEmpty())
+            throw new IllegalArgumentException("ERROR: El cliente no está registrado");
+        else if (!clienteEnBD.get().getPassword().equals(password))
+            throw new IllegalArgumentException("ERROR: Contraseña incorrecta");
+
+        clienteActual = clienteEnBD;
+        System.out.println("LOGIN: Inicio de sesión correcto");
     }
 
-    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException, IOException {
-        return pedidoControlador.exportarIngredientes(ingredientes);
+    public void mostrarProductosDelCatalogo() throws SQLException {
+        // No hace falta estar logeado para ver los productos
+        productoControlador.mostrarProductos();
+    }
+
+    public void agregarProductoAlCatalogo(Producto producto) throws SQLException, IllegalArgumentException {
+        if (clienteActual.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún cliente logeado");
+        else if (!clienteActual.get().isAdmin())
+            throw new IllegalArgumentException("ERROR: Solo los administradores pueden añadir productos");
+
+        productoControlador.agregarProducto(producto);
+        System.out.println("PRODUCTO: Producto añadido");
+    }
+
+    public void agregarAlCarrito(Producto producto, int cantidad) throws SQLException, IllegalArgumentException {
+        if (clienteActual.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún cliente logeado");
+        if (cantidad <= 0)
+            throw new IllegalArgumentException("ERROR: La cantidad debe ser mayor que 0");
+
+        LineaPedido linea = new LineaPedido(cantidad, producto);
+
+        pedidoControlador.agregarLineaPedido(linea);
+        System.out.println("CARRITO: Añadido al carrito");
+    }
+
+    public void finalizarPedido(Pagable pago) throws SQLException, IllegalArgumentException {
+        if (clienteActual.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún cliente logeado");
+
+        pedidoControlador.finalizarPedido(pago, clienteActual.get());
+        System.out.println("PEDIDO: Pedido finalizado");
+    }
+
+    public void cancelarPedido() throws SQLException, IllegalArgumentException {
+        if (clienteActual.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún cliente logeado");
+
+        pedidoControlador.cancelarPedido(clienteActual.get());
+        System.out.println("PEDIDO: Pedido cancelado");
+    }
+
+    public void recibirPedido(Pedido pedido) throws SQLException, IllegalArgumentException {
+        if (clienteActual.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún cliente logeado");
+
+        pedidoControlador.entregarPedido(pedido.getId());
+        System.out.println("PEDIDO: Pedido recibido");
+    }
+
+    public Optional<Pedido> getPedidoActual() throws SQLException {
+        return pedidoControlador.getPedidoActual();
     }
 }

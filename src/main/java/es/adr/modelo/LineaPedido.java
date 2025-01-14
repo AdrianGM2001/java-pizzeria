@@ -1,22 +1,40 @@
 package es.adr.modelo;
 
 public class LineaPedido {
-    private final int id;
+    private int id;
+    private int pedidoId;
     private int cantidad;
-    private final Producto producto;
+    private Producto producto;
 
-    public LineaPedido(int id, int cantidad, Producto producto) {
+    public LineaPedido(int id, int pedidoId, int cantidad, Producto producto) {
         this.id = id;
+        this.pedidoId = pedidoId;
         this.cantidad = cantidad;
         this.producto = producto;
     }
 
+    public LineaPedido(int cantidad, Producto producto) {
+        this(0, 0, cantidad, producto);
+    }
+
     public LineaPedido(LineaPedido lp) {
-        this(lp.id, lp.cantidad, lp.producto);
+        this(lp.id, lp.pedidoId, lp.cantidad, lp.producto);
     }
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getPedidoId() {
+        return pedidoId;
+    }
+
+    public void setPedidoId(int pedidoId) {
+        this.pedidoId = pedidoId;
     }
 
     public int getCantidad() {

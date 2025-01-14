@@ -1,9 +1,9 @@
 package es.adr.modelo;
 
 public abstract class Producto {
-    protected final int id;
-    protected final String nombre;
-    protected final double precio;
+    protected int id;
+    protected String nombre;
+    protected double precio;
 
     public Producto(int id, String nombre, double precio) {
         this.id = id;
@@ -15,12 +15,24 @@ public abstract class Producto {
         return id;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getNombre() {
         return nombre;
     }
 
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
     public double getPrecio() {
         return precio;
+    }
+
+    public void setPrecio(double precio) {
+        this.precio = precio;
     }
 
     @Override

@@ -1,93 +1,90 @@
 package es.adr.controlador;
 
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import es.adr.modelo.*;
-import es.adr.utilidades.GestionFicheros;
+import es.adr.modelo.dao.Dao;
+import es.adr.modelo.dao.impl.PedidoDao;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class PedidoControlador {
-    private static PedidoControlador pedidoControlador;
+    private static PedidoControlador instance;
+    private static Dao<Pedido> pedidoDao;
 
-    private List<Pedido> pedidos;
-    private Pedido pedidoActual;
-
-    private PedidoControlador() {
-        pedidos = new ArrayList<>();
-        pedidoActual = null;
+    private PedidoControlador(Connection conn) {
+        pedidoDao = new PedidoDao(conn);
     }
 
-    public static PedidoControlador getInstance() {
-        if (pedidoControlador != null)
-            return pedidoControlador;
-        
-        return new PedidoControlador();
+    public static PedidoControlador getInstance(Connection conn) {
+        if (instance == null)
+            instance = new PedidoControlador(conn);
+        return instance;
     }
 
-    public List<Pedido> getPedidos() {
-        return pedidos;
+    public void agregarPedido(Pedido pedido) throws SQLException, IllegalArgumentException {
+        pedidoDao.save(pedido);
     }
 
-    public void setPedidos(List<Pedido> pedidos) {
-        this.pedidos = pedidos;
-    }
+    public void agregarLineaPedido(LineaPedido linea) throws SQLException, IllegalArgumentException {
+        List<Pedido> pedidosPendientes = ((PedidoDao) pedidoDao).findByEstadoPedido(ESTADO_PEDIDO.PENDIENTE);
+        if (pedidosPendientes.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún pedido pendiente");
 
-    public Pedido getPedidoActual() {
-        return pedidoActual;
-    }
+        Pedido pedidoActual = pedidosPendientes.getFirst();
+        Optional<LineaPedido> lineaActual = ((PedidoDao) pedidoDao).findLineaPedido(pedidoActual.getId(), linea.getProducto().getId());
+        linea.setPedidoId(pedidoActual.getId());
 
-    public void setPedidoActual(Pedido pedidoActual) {
-        this.pedidoActual = pedidoActual;
-    }
-
-    public boolean anyadirLinea(LineaPedido lp) {
-        pedidoActual.addLinea(lp);
-        return true;
-    }
-
-    public boolean finalizarPedido(Pagable pago) {
-        if (pedidoActual.getLineas().isEmpty())
-            throw new IllegalStateException("ERROR: No hay ninguna línea en el pedido");
-
-        pago.pagar(pedidoActual.getPrecioTotal());
-        pedidoActual.setEstado(ESTADO_PEDIDO.FINALIZADO);
-
-        return true;
-    }
-
-    public Pedido cancelarPedido() {
-        switch (pedidoActual.getEstado()) {
-            case PENDIENTE, FINALIZADO:
-                System.out.println("CANCELAR_PEDIDO: Pedido cancelado");
-                pedidoActual.setEstado(ESTADO_PEDIDO.CANCELADO);
-                return pedidoActual;
-            case ENTREGADO:
-                throw new IllegalStateException("ERROR: No se puede cancelar un pedido que ya haya sido entregado");
-            case CANCELADO:
-                throw new IllegalStateException("ERROR: El pedido ya ha sido cancelado");
-            default:
-                throw new IllegalStateException("ERROR: No hay ningún pedido actualmente");
+        if (lineaActual.isEmpty()) {
+            ((PedidoDao) pedidoDao).saveLineaPedido(linea);
+        } else {
+            linea.addCantidad(lineaActual.get().getCantidad());
+            ((PedidoDao) pedidoDao).updateLineaPedido(linea);
         }
     }
 
-    public Pedido entregarPedido() {
-        if (pedidoActual.getEstado() != ESTADO_PEDIDO.FINALIZADO)
-            throw new IllegalStateException("ERROR: No hay ningún pedido finalizado");
-        
-        pedidoActual.setEstado(ESTADO_PEDIDO.ENTREGADO);
-        System.out.println("ENTREGAR_PEDIDO: Pedido entregado");
-        return pedidoActual;
+    public void finalizarPedido(Pagable pago, Cliente cliente) throws SQLException, IllegalArgumentException {
+        List<Pedido> pedidos = ((PedidoDao)pedidoDao).findByEstadoPedido(ESTADO_PEDIDO.PENDIENTE);
+
+        Optional<Pedido> pedidoActual = pedidos.stream().filter(p -> p.getCliente().getId() == cliente.getId()).findFirst();
+
+        if (pedidoActual.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún pedido pendiente para este cliente");
+
+        pago.pagar(pedidoActual.get().getPrecioTotal());
+        pedidoActual.get().setEstado(ESTADO_PEDIDO.FINALIZADO);
+        pedidoActual.get().setMetodoPago(pago);
+        pedidoDao.update(pedidoActual.get());
     }
 
-    public List<Ingrediente> importarIngredientes() throws FileNotFoundException, IllegalStateException, IOException {
-        return GestionFicheros.importarIngredientesCSV();
+    public void cancelarPedido(Cliente cliente) throws SQLException, IllegalArgumentException {
+        List<Pedido> pedidos = ((PedidoDao)pedidoDao).findByEstadoPedido(ESTADO_PEDIDO.PENDIENTE);
+
+        Optional<Pedido> pedidoActual = pedidos.stream().filter(p -> p.getCliente().getId() == cliente.getId()).findFirst();
+
+        if (pedidoActual.isEmpty())
+            throw new IllegalArgumentException("ERROR: No hay ningún pedido pendiente para este cliente");
+
+        pedidoActual.get().setEstado(ESTADO_PEDIDO.CANCELADO);
+        pedidoDao.update(pedidoActual.get());
     }
 
-    public boolean exportarIngredientes(List<Ingrediente> ingredientes) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException, IOException {
-        return GestionFicheros.exportarIngredientesCSV(ingredientes);
+    public void entregarPedido(int idPedido) throws SQLException, IllegalArgumentException {
+        Optional<Pedido> pedido = pedidoDao.find(idPedido);
+        if (pedido.isEmpty())
+            throw new IllegalArgumentException("ERROR: No existe ningún pedido con ese ID");
+        else if (pedido.get().getEstado() != ESTADO_PEDIDO.FINALIZADO)
+            throw new IllegalArgumentException("ERROR: No se puede entregar un pedido que no esté finalizado");
+
+        pedido.get().setEstado(ESTADO_PEDIDO.ENTREGADO);
+        pedidoDao.update(pedido.get());
+    }
+
+    public Optional<Pedido> getPedidoActual() throws SQLException {
+        List<Pedido> pedidos = pedidoDao.findAll();
+        pedidos.sort(Comparator.comparingInt(Pedido::getId).reversed()); // Ordenamos por ID descendente para obtener el último pedido
+        return pedidos.stream().findFirst();
     }
 }

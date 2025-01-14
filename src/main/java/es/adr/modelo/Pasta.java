@@ -10,7 +10,16 @@ public class Pasta extends Producto {
         this.ingredientes = ingredientes;
     }
 
+    public Pasta(String nombre, double precio, List<Ingrediente> ingredientes) {
+        this(0, nombre, precio, ingredientes);
+    }
+
     public List<Ingrediente> getIngredientes() {
         return ingredientes;
+    }
+
+    @Override
+    public String toString() {
+        return "Pasta [id=" + id + ", nombre=" + nombre + ", precio=" + precio + "ingredientes=" + ingredientes + "]";
     }
 }

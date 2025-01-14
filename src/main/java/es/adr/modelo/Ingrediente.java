@@ -1,20 +1,12 @@
 package es.adr.modelo;
 
-import com.opencsv.bean.CsvBindAndSplitByName;
-import com.opencsv.bean.CsvBindByName;
-
 import java.util.List;
 
 
 public class Ingrediente {
-    @CsvBindByName(column = "id")
     private int id;
-    @CsvBindByName(column = "nombre")
     private String nombre;
-    @CsvBindAndSplitByName(column = "alergenos", writeDelimiter = ",", elementType = String.class)
     private List<String> alergenos;
-
-    public Ingrediente() {}
 
     public Ingrediente(int id, String nombre, List<String> alergenos) {
         this.id = id;
@@ -22,8 +14,16 @@ public class Ingrediente {
         this.alergenos = alergenos;
     }
 
+    public Ingrediente(String nombre, List<String> alergenos) {
+        this(0, nombre, alergenos);
+    }
+
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNombre() {
